@@ -9,8 +9,8 @@ from PIL import Image
 # -----------------------------
 # Config
 # -----------------------------
-image_size = 256
-batch_size = 32
+image_size = 128  # <-- CHANGED
+batch_size = 64   # Increased batch size as 128x128 uses less memory
 latent_dim = 100
 epochs = 200
 lr = 0.0002
@@ -41,7 +41,7 @@ class CustomImageDataset(Dataset):
         return image, 0
 
 # -----------------------------
-# Models (Corrected for 256x256)
+# Models (Corrected for 128x128)
 # -----------------------------
 
 
@@ -49,19 +49,24 @@ class Generator(nn.Module):
     def __init__(self):
         super(Generator, self).__init__()
         self.main = nn.Sequential(
+            # Input: Z latent vector, size latent_dim x 1 x 1
             nn.ConvTranspose2d(latent_dim, 1024, 4, 1, 0,
                                bias=False), nn.BatchNorm2d(1024), nn.ReLU(True),
+            # State: 1024 x 4 x 4
             nn.ConvTranspose2d(1024, 512, 4, 2, 1, bias=False), nn.BatchNorm2d(
                 512), nn.ReLU(True),
+            # State: 512 x 8 x 8
             nn.ConvTranspose2d(512, 256, 4, 2, 1, bias=False), nn.BatchNorm2d(
                 256), nn.ReLU(True),
+            # State: 256 x 16 x 16
             nn.ConvTranspose2d(256, 128, 4, 2, 1, bias=False), nn.BatchNorm2d(
                 128), nn.ReLU(True),
+            # State: 128 x 32 x 32
             nn.ConvTranspose2d(128, 64, 4, 2, 1, bias=False), nn.BatchNorm2d(
                 64), nn.ReLU(True),
-            nn.ConvTranspose2d(64, 32, 4, 2, 1, bias=False), nn.BatchNorm2d(
-                32), nn.ReLU(True),
-            nn.ConvTranspose2d(32, 1, 4, 2, 1, bias=False), nn.Tanh()
+            # State: 64 x 64 x 64
+            nn.ConvTranspose2d(64, 1, 4, 2, 1, bias=False), nn.Tanh()
+            # Final State: 1 x 128 x 128
         )
 
     def forward(self, input):
@@ -72,19 +77,24 @@ class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
         self.main = nn.Sequential(
-            nn.Conv2d(1, 32, 4, 2, 1, bias=False), nn.LeakyReLU(
+            # Input: 1 x 128 x 128
+            nn.Conv2d(1, 64, 4, 2, 1, bias=False), nn.LeakyReLU(
                 0.2, inplace=True),
-            nn.Conv2d(32, 64, 4, 2, 1, bias=False), nn.BatchNorm2d(
-                64), nn.LeakyReLU(0.2, inplace=True),
+            # State: 64 x 64 x 64
             nn.Conv2d(64, 128, 4, 2, 1, bias=False), nn.BatchNorm2d(
                 128), nn.LeakyReLU(0.2, inplace=True),
+            # State: 128 x 32 x 32
             nn.Conv2d(128, 256, 4, 2, 1, bias=False), nn.BatchNorm2d(
                 256), nn.LeakyReLU(0.2, inplace=True),
+            # State: 256 x 16 x 16
             nn.Conv2d(256, 512, 4, 2, 1, bias=False), nn.BatchNorm2d(
                 512), nn.LeakyReLU(0.2, inplace=True),
+            # State: 512 x 8 x 8
             nn.Conv2d(512, 1024, 4, 2, 1, bias=False), nn.BatchNorm2d(
                 1024), nn.LeakyReLU(0.2, inplace=True),
+            # State: 1024 x 4 x 4
             nn.Conv2d(1024, 1, 4, 1, 0, bias=False), nn.Sigmoid()
+            # Output: scalar probability
         )
 
     def forward(self, input):
@@ -92,7 +102,6 @@ class Discriminator(nn.Module):
 
 
 # ## --- MAIN EXECUTION BLOCK --- ##
-# This is the required fix.
 if __name__ == '__main__':
     script_dir = os.path.dirname(os.path.abspath(__file__))
     data_path = os.path.join(script_dir, "final_shayad", "class1")
@@ -105,7 +114,6 @@ if __name__ == '__main__':
     ])
 
     dataset = CustomImageDataset(root_dir=data_path, transform=transform)
-    # On Windows, set num_workers=0 if you still face issues, but 2 should be fine.
     dataloader = DataLoader(dataset, batch_size=batch_size,
                             shuffle=True, num_workers=2)
 
@@ -118,7 +126,7 @@ if __name__ == '__main__':
 
     fixed_noise = torch.randn(64, latent_dim, 1, 1, device=device)
 
-    os.makedirs("generated_256", exist_ok=True)
+    os.makedirs("generated_128", exist_ok=True)
     print(f"Starting Training on {len(dataset)} images on {device}...")
 
     for epoch in range(epochs):
@@ -154,11 +162,11 @@ if __name__ == '__main__':
         with torch.no_grad():
             fake = netG(fixed_noise).detach().cpu()
         utils.save_image(
-            fake, f"generated_256/epoch_{epoch+1}.png", normalize=True, nrow=8)
+            fake, f"generated_128/epoch_{epoch+1}.png", normalize=True, nrow=8)
 
         # Print progress
         print(
             f"✅ Finished Epoch [{epoch+1}/{epochs}] | Loss D: {lossD.item():.4f}, Loss G: {lossG.item():.4f}"
         )
 
-    print("🎉 Training complete! Images saved in 'generated_256/' folder.")
+    print("🎉 Training complete! Images saved in 'generated_128/' folder.")
