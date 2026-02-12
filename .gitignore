@@ -1,2 +1,48 @@
-output/
+# System
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+
+# Data & Datasets
+Kolam Dataset/
+final_shayad/
+final_shayad.rar
+*.rar
+*.zip
+achal_scrape/
+class2/
 data/
+
+# Generated/Processed Images
+generated/
+generated_128/
+generated_256/
+output/
+output_sora/
+processed_256x256/
+processed_256x256_2/
+temp_preprocess/
+temp_processed/
+to_split/
+white_padding_removed/
+grayscaled/
+inverted/
+manual_invert/
+manual_inverted/
+splited/
+splited_standardized/
+
+# Scraping Results
+bing_results.html
+google_results.html
+gem.txt
+
+# Node.js (Frontend)
+sd-frontend/node_modules/
+sd-frontend/build/
+sd-frontend/dist/

@@ -5,3 +5,7 @@ matplotlib
 pillow 
 numpy 
 tqdm
+fastapi
+uvicorn
+requests
+python-multipart
