@@ -9,3 +9,6 @@ fastapi
 uvicorn
 requests
 python-multipart
+opencv-python
+pypotrace
+scikit-image
