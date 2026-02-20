@@ -76,6 +76,23 @@ async def generate_image(prompt_data: Prompt):
         
         with open(filepath, "wb") as f:
             f.write(image_bytes)
+            
+        # --- ENHANCE IMAGE AUTOMATICALLY ---
+        try:
+            from enhance_kolam import enforce_symmetry
+            print(f"Enhancing image: {filepath}")
+            # Overwrite the original file with the enhanced version
+            enforce_symmetry(filepath, filepath)
+            
+            # Reload the enhanced image to return correct base64 to frontend
+            with open(filepath, "rb") as f:
+                enhanced_bytes = f.read()
+                image_base64 = base64.b64encode(enhanced_bytes).decode('utf-8')
+                
+        except Exception as e:
+            print(f"Warning: Auto-enhancement failed: {e}")
+            # Continue with original image if enhancement fails
+        # -----------------------------------
         
         return {
             "image": image_base64,
